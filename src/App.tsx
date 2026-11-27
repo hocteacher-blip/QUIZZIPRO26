@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, ArrowLeft, ArrowRight, Award, BookOpen, BrainCircuit, Check, ChevronDown, CircleHelp, Clock3, Download, FilePlus2, Gamepad2, GraduationCap, LayoutDashboard, LogIn, LogOut, Medal, Moon, Plus, Save, Settings, ShieldCheck, Sparkles, Sun, Trophy, Users, X, Zap } from 'lucide-react';
-import { auth, firebaseReady, generateQuestions, studentSignIn, teacherSignIn } from './lib/firebase';
-import { createRoom, deleteQuiz, joinRoom, listQuizzes, readAnswerKey, readSubmissions, saveQuiz, submitAnswer, updatePlayerScore, updateRoom, watchAuth, watchRoom } from './lib/store';
+import { auth, firebaseReady, generateQuestions, studentSignIn, teacherSignIn, watchAuth } from './lib/firebase';
+import { createRoom, deleteQuiz, joinRoom, listQuizzes, readAnswerKey, readSubmissions, saveQuiz, submitAnswer, updatePlayerScore, updateRoom, watchRoom } from './lib/store';
 import type { Player, Question, Quiz, Room } from './types';
 import './styles.css';
 

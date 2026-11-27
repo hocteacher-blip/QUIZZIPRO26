@@ -2,12 +2,20 @@
 
 Ứng dụng web quiz tương tác tiếng Việt. Frontend React + TypeScript + Vite; Firebase Authentication + Firestore cho dữ liệu trực tuyến; Vercel dùng để triển khai frontend.
 
-## 1. Chế độ trải nghiệm và chế độ trực tuyến
+## 1. Bản sửa lỗi build Vercel
+
+Bản này sửa các lỗi TypeScript được ghi nhận trong Vercel build log ngày 27/11/2026:
+- `watchAuth` được import từ đúng module `src/lib/firebase.ts` (không phải `store.ts`).
+- Callback xác thực nhận kiểu `User | null` từ hàm `watchAuth`, khắc phục lỗi tham số ngầm định `any`.
+- Dữ liệu cập nhật Firestore được ép kiểu qua `UpdateData<DocumentData>` thay vì `Record<string, unknown>`.
+- Khai báo các install scripts cần thiết của `esbuild`, `protobufjs`, `@firebase/util` để npm mới không chặn các bước cài đặt phụ thuộc.
+
+## 2. Chế độ trải nghiệm và chế độ trực tuyến
 
 - Không có cấu hình Firebase: ứng dụng chạy ở **chế độ trải nghiệm cục bộ**, dùng localStorage. Phù hợp xem giao diện và thử luồng trên cùng trình duyệt; không đồng bộ giữa các thiết bị.
 - Có cấu hình Firebase: giáo viên đăng nhập Google, học sinh đăng nhập ẩn danh, phòng và câu trả lời đồng bộ qua Firestore.
 
-## 2. Chạy trên máy tính
+## 3. Chạy trên máy tính
 
 Cần Node.js 20 trở lên.
 
@@ -25,7 +33,7 @@ npm run build
 npm run preview
 ```
 
-## 3. Tạo Firebase miễn phí
+## 4. Tạo Firebase miễn phí
 
 1. Mở https://console.firebase.google.com/ và tạo project.
 2. Thêm ứng dụng Web (biểu tượng `</>`), sao chép cấu hình Firebase.
@@ -49,7 +57,7 @@ VITE_FIREBASE_APP_ID=...
 
 **Lưu ý:** Firebase Spark có hạn mức miễn phí. Firestore có thể từ chối thao tác khi vượt quota. Theo dõi Usage trong Firebase Console. Không nhập thông tin thanh toán nếu yêu cầu giữ ngân sách 0 đồng.
 
-## 4. Đưa lên Vercel bằng GitHub
+## 5. Đưa lên Vercel bằng GitHub
 
 ### A. Đưa mã nguồn lên GitHub
 
@@ -73,7 +81,7 @@ VITE_FIREBASE_APP_ID=...
 
 Mỗi lần cập nhật mã nguồn trên GitHub, Vercel tự tạo deployment mới.
 
-## 5. Các chức năng hiện có
+## 6. Các chức năng hiện có
 
 - Trang giới thiệu responsive; giao diện sáng/tối.
 - Dashboard giáo viên, quản lý bộ đề, thêm/sửa/xóa câu hỏi.
@@ -85,7 +93,7 @@ Mỗi lần cập nhật mã nguồn trên GitHub, Vercel tự tạo deployment 
 - Bảng xếp hạng và xuất CSV mở được bằng Excel.
 - Tích hợp Gemini qua Firebase AI Logic để sinh câu hỏi (sau khi cấu hình Firebase và bật dịch vụ/model tương thích trong Firebase Console).
 
-## 6. Giới hạn cần biết trước khi dùng thật
+## 7. Giới hạn cần biết trước khi dùng thật
 
 - Đây là bản MVP chạy được, không phải hệ thống thi có chống gian lận cấp cao. Trình duyệt giáo viên đang điều phối việc chuyển câu và chấm điểm; giáo viên cần giữ tab phòng thi mở trong suốt cuộc thi.
 - Bộ đề mẫu và chế độ demo dùng localStorage. Dữ liệu trực tuyến chỉ hoạt động sau khi cấu hình Firebase.
@@ -94,7 +102,7 @@ Mỗi lần cập nhật mã nguồn trên GitHub, Vercel tự tạo deployment 
 - Không thể cam kết 100 người đồng thời chỉ bằng mã nguồn. Cần thử tải thật trên Firebase project và theo dõi quota, chi phí, độ trễ trước khi tổ chức sự kiện lớn. Giữ Spark/không bật billing để tránh phát sinh chi phí; khi chạm quota miễn phí, thao tác có thể tạm dừng.
 - Bản hiện tại hỗ trợ trắc nghiệm lựa chọn; các dạng ghép đôi, điền khuyết và phân tích báo cáo nâng cao là phần mở rộng tiếp theo.
 
-## 7. Cấu trúc
+## 8. Cấu trúc
 
 ```text
 src/
