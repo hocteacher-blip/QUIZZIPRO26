@@ -1,8 +1,8 @@
-# QUIZZI ARENA PRO – Bản tái xây dựng V2
+# QUIZZI ARENA PRO – Bản giao diện sáng V2.1
 
-Nền tảng web tiếng Việt dành cho giáo viên tổ chức học liệu, lớp học, bài tập và cuộc thi tương tác. Frontend dùng React 19 + TypeScript + Vite; Firebase Authentication/Firestore dùng cho tài khoản, dữ liệu và phòng thi trực tuyến; Vercel triển khai website.
+Nền tảng web tiếng Việt dành cho giáo viên tổ chức học liệu, lớp học, bài tập và cuộc thi tương tác. Frontend dùng React 19 + TypeScript + Vite; Vercel triển khai website. Bản này mặc định chạy chế độ trải nghiệm cục bộ, không bắt buộc cấu hình Firebase để build và xuất bản website. Firebase chỉ là phần tích hợp tùy chọn cho giai đoạn đồng bộ đa thiết bị.
 
-## 1. Chức năng có trong bản V2
+## 1. Chức năng có trong bản V2.1
 
 - Dashboard giáo viên với chỉ số học liệu, lớp và nhiệm vụ.
 - Quản lý lớp học: tạo lớp, khối, năm học, sĩ số; đồng bộ Firestore khi giáo viên đăng nhập Firebase.
@@ -14,7 +14,7 @@ Nền tảng web tiếng Việt dành cho giáo viên tổ chức học liệu, 
 - Phòng thi realtime qua Firestore; giáo viên bắt đầu, chuyển câu, kết thúc; học sinh gửi câu trả lời; bảng xếp hạng và xuất kết quả CSV.
 - Quản lý nhiệm vụ gắn với bộ đề và lớp; lưu Firestore khi đăng nhập.
 - Báo cáo tổng quan, cài đặt, xuất bản sao JSON và giao diện quản trị.
-- Giao diện responsive, chế độ tối/sáng.
+- Giao diện responsive, mặc định sáng, có thể chuyển sang tối; lựa chọn giao diện được ghi nhớ trên thiết bị.
 
 ## 2. Chạy cục bộ
 
@@ -33,36 +33,25 @@ npm run build
 npm run preview
 ```
 
-## 3. Cấu hình Firebase
+## 3. Cần Firebase để xuất bản không?
 
-1. Tạo project tại https://console.firebase.google.com/.
-2. Thêm ứng dụng Web và lấy cấu hình SDK.
-3. Authentication → Sign-in method: bật Google và Anonymous.
-4. Firestore Database → tạo database.
-5. Firestore → Rules: dán nội dung `firestore.rules` và Publish.
-6. Tạo `.env.local` ở thư mục gốc, theo `.env.example`:
+**Không.** Để đưa website lên Vercel ở chế độ trải nghiệm, không cần tạo Firebase, không cần nhập 6 biến môi trường, không cần bật Google/Anonymous Authentication và không cần tạo Firestore. Chỉ cần GitHub và Vercel.
 
-```env
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project
-VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-```
+Khi chưa có Firebase:
+- Bộ đề, lớp học và nhiệm vụ lưu trong `localStorage` của trình duyệt hiện tại.
+- Phòng thi chỉ hoạt động trong cùng trình duyệt/môi trường lưu trữ cục bộ; không đồng bộ giữa điện thoại và máy tính khác nhau.
+- Tạo câu hỏi AI chưa khả dụng.
 
-7. Authentication → Settings → Authorized domains: thêm domain Vercel.
-8. Muốn dùng AI, bật Firebase AI Logic và kiểm tra model/quota khả dụng cho project.
-
-Không đưa file `.env.local` lên GitHub. Các biến `VITE_*` được đóng vào mã frontend khi build; không đặt private key, mật khẩu hoặc service-account JSON ở đây.
+Firebase là phần tích hợp tùy chọn nếu sau này cần đăng nhập giáo viên, lưu dữ liệu đám mây và đồng bộ phòng thi giữa nhiều thiết bị. Khi triển khai phần đó cần tạo Firebase Web App, bật Authentication, tạo Firestore, cài Rules và thêm 6 biến trong `.env.example` vào Vercel. Không làm các bước này khi chỉ muốn xuất bản bản trải nghiệm.
 
 ## 4. Triển khai GitHub → Vercel
 
 - Giải nén ZIP sao cho `package.json`, `index.html`, `src/` nằm ngay ở thư mục gốc repository.
-- Nếu repository cũ đang chứa bản demo, xóa các file cũ trước khi tải toàn bộ nội dung bản V2 lên. Không tải ZIP như một file đơn lẻ.
+- Cập nhật repository GitHub đang được Vercel kết nối. Thay toàn bộ nội dung bản cũ bằng bản trong ZIP mới; không upload ZIP như một file đơn lẻ và không để `package.json` nằm trong thư mục con.
 - Vercel Project Settings: Framework Preset `Vite`, Build Command `npm run build`, Output Directory `dist`.
-- Thêm đủ 6 biến `VITE_FIREBASE_*` trong Environment Variables (Production, Preview nếu cần), rồi Deploy.
+- **Không thêm Environment Variables** nếu chỉ triển khai bản trải nghiệm. Để trống phần này và nhấn Deploy.
 - Vercel đã có `vercel.json` rewrite để hỗ trợ đường dẫn `/join`.
+
 
 ## 5. Firestore data model
 
@@ -76,7 +65,7 @@ Không đưa file `.env.local` lên GitHub. Các biến `VITE_*` được đóng
 
 ## 6. Các giới hạn quan trọng – đọc trước khi dùng thật
 
-Đây là **bản V2/MVP có chức năng thực tế**, chưa phải bản thương mại đã nghiệm thu đủ toàn bộ yêu cầu vận hành trường học.
+Đây là **bản V2.1 giao diện sáng / trải nghiệm cục bộ**, chưa phải bản thương mại đã nghiệm thu đủ toàn bộ yêu cầu vận hành trường học.
 
 - Chế độ không có Firebase lưu dữ liệu cục bộ trong trình duyệt; không đồng bộ giữa các thiết bị.
 - Dữ liệu lớp và nhiệm vụ hiện lưu thông tin lớp/sĩ số và metadata nhiệm vụ. Chưa có sổ danh sách học sinh chi tiết, luồng học sinh nộp bài tập từ xa, chấm bài tự luận, hay báo cáo tiến bộ từng em.
