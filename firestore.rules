@@ -2,35 +2,72 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function roomExists(pin) { return exists(/databases/$(database)/documents/rooms/$(pin)); }
-    function isHost(pin) { return signedIn() && get(/databases/$(database)/documents/rooms/$(pin)).data.hostUid == request.auth.uid; }
+    function roomPath(pin) { return /databases/$(database)/documents/rooms/$(pin); }
+    function roomExists(pin) { return exists(roomPath(pin)); }
+    function roomData(pin) { return get(roomPath(pin)).data; }
+    function isHost(pin) { return signedIn() && roomExists(pin) && roomData(pin).hostUid == request.auth.uid; }
+    function ownsDocument() { return signedIn() && request.resource.data.ownerUid == request.auth.uid; }
+    function ownsExistingDocument() { return signedIn() && resource.data.ownerUid == request.auth.uid; }
 
     match /quizzes/{quizId} {
-      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow read, update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if ownsDocument();
+      allow read, update, delete: if ownsExistingDocument();
+    }
+
+    match /classes/{classId} {
+      allow create: if ownsDocument();
+      allow read, update, delete: if ownsExistingDocument();
+    }
+
+    match /assignments/{assignmentId} {
+      allow create: if ownsDocument();
+      allow read, update, delete: if ownsExistingDocument();
     }
 
     match /rooms/{pin} {
-      allow create: if signedIn() && request.resource.data.hostUid == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.pin == pin;
       allow read: if signedIn();
       allow update, delete: if isHost(pin);
 
       match /players/{playerId} {
-        allow read: if signedIn();
-        allow create: if signedIn() && request.auth.uid == playerId
+        allow read: if signedIn() && roomExists(pin);
+        allow create: if signedIn() && roomExists(pin)
+          && roomData(pin).status == 'waiting'
+          && request.auth.uid == playerId
           && request.resource.data.id == request.auth.uid
-          && request.resource.data.score == 0;
-        allow update: if isHost(pin) || (signedIn() && request.auth.uid == playerId && request.resource.data.score == resource.data.score);
+          && request.resource.data.score == 0
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 40;
+        allow update: if isHost(pin) || (signedIn()
+          && request.auth.uid == playerId
+          && request.resource.data.score == resource.data.score
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','team']));
         allow delete: if isHost(pin) || (signedIn() && request.auth.uid == playerId);
       }
 
       match /answers/{answerId} {
-        allow create, update: if signedIn()
+        function currentQuestionMatches() {
+          let r = roomData(pin);
+          return r.status == 'active'
+            && r.currentIndex >= 0
+            && r.currentIndex < r.questions.size()
+            && request.resource.data.questionId == r.questions[r.currentIndex].id;
+        }
+        allow create: if signedIn() && roomExists(pin)
           && request.resource.data.playerId == request.auth.uid
           && request.resource.data.questionId is string
-          && request.resource.data.answer is string;
+          && request.resource.data.answer is string
+          && request.resource.data.answer.size() > 0
+          && request.resource.data.answer.size() <= 500
+          && answerId == request.resource.data.questionId + '_' + request.auth.uid
+          && exists(/databases/$(database)/documents/rooms/$(pin)/players/$(request.auth.uid))
+          && currentQuestionMatches();
         allow read: if isHost(pin);
-        allow delete: if isHost(pin);
+        allow update, delete: if false;
       }
 
       match /questionKeys/{questionId} {
