@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function roomExists(pin) { return exists(/databases/$(database)/documents/rooms/$(pin)); }
+    function isHost(pin) { return signedIn() && get(/databases/$(database)/documents/rooms/$(pin)).data.hostUid == request.auth.uid; }
+
+    match /quizzes/{quizId} {
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow read, update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /rooms/{pin} {
+      allow create: if signedIn() && request.resource.data.hostUid == request.auth.uid;
+      allow read: if signedIn();
+      allow update, delete: if isHost(pin);
+
+      match /players/{playerId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.auth.uid == playerId
+          && request.resource.data.id == request.auth.uid
+          && request.resource.data.score == 0;
+        allow update: if isHost(pin) || (signedIn() && request.auth.uid == playerId && request.resource.data.score == resource.data.score);
+        allow delete: if isHost(pin) || (signedIn() && request.auth.uid == playerId);
+      }
+
+      match /answers/{answerId} {
+        allow create, update: if signedIn()
+          && request.resource.data.playerId == request.auth.uid
+          && request.resource.data.questionId is string
+          && request.resource.data.answer is string;
+        allow read: if isHost(pin);
+        allow delete: if isHost(pin);
+      }
+
+      match /questionKeys/{questionId} {
+        allow read, write: if isHost(pin);
+      }
+    }
+  }
+}
